@@ -931,9 +931,13 @@ chromium_configure() {
 	# The sysroot is the oldest debian image that chromium supports, we don't need it
 	myconf_gn+=" use_sysroot=false"
 
-	# Don't use in-tree libc++ (buildtools/third_party/libc++ and buildtools/third_party/libc++abi)
+	# Don't use in-tree libc++ for musl (buildtools/third_party/libc++ and buildtools/third_party/libc++abi),
 	# instead use system C++ library for C++ standard library support.
-	myconf_gn+=" use_custom_libcxx=false"
+        if use elibc_musl; then
+	    myconf_gn+=" use_custom_libcxx=false"
+        else
+            myconf_gn+=" use_custom_libcxx=true"
+        fi
 
 	# Disable pseudolocales, only used for testing
 	myconf_gn+=" enable_pseudolocales=false"
