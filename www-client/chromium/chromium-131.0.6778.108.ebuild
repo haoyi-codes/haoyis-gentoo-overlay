@@ -405,9 +405,7 @@ src_prepare() {
 	fi
 
 	# Apply hardened-chromium patches.
-        if use hardened; then
-	    eapply "${FILESDIR}/hardened-chromium/"
-        fi
+	eapply "${FILESDIR}/hardened-chromium/"
 
 	default
 

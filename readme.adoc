@@ -6,8 +6,9 @@ amd64 systems with a primary focus on getting packages to work with the musl/llv
 This overlay is a work in progress.
 
 === Notes
-
-1. www-client/chromium will not compile against musl unless you have cdefs.h,
+1. www-client/chromium includes various patches in relation to hardening taken from
+   hardened-chromium (secureblue) and Vanadium (GrapheneOS).
+2. www-client/chromium will not compile against musl unless you have cdefs.h,
    tree.h and execinfo.h. These libraries should not be installed on your system
    as it prompt packages to use them and cause breakages. A solution would be to
    install them first, compile chromium, then uninstall them. I plan on creating
