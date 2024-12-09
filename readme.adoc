@@ -1,0 +1,22 @@
+== Description
+
+This repository contains various patches for software intended to run on
+amd64 systems with a primary focus on getting packages to work with the musl/llvm profile.
+
+This overlay is a work in progress.
+
+=== Notes
+
+1. www-client/chromium will not compile against musl unless you have cdefs.h,
+   tree.h and execinfo.h. These libraries should not be installed on your system
+   as it prompt packages to use them and cause breakages. A solution would be to
+   install them first, compile chromium, then uninstall them. I plan on creating
+   this function built into the ebuild as a temporary fix until we can fully
+   patch out chromium's reliance on glibc specific libraries.
+
+=== Acknowledgements
+
+==== www-client/chromium
+1. https://github.com/12101111/overlay
+2. https://github.com/secureblue/hardened-chromium
+3. https://github.com/GrapheneOS/Vanadium
