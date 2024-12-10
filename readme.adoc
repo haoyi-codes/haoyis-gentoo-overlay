@@ -1,19 +1,23 @@
 == Description
 
-This repository contains various patches for software intended to run on
-amd64 systems with a primary focus on getting packages to work with the musl/llvm profile.
-
 This overlay is a work in progress.
 
+It is intended for use with amd64 systems with a strong focus on the musl/llvm
+profile.
+
 === Notes
-1. www-client/chromium includes various patches in relation to hardening taken from
-   hardened-chromium (secureblue) and Vanadium (GrapheneOS).
-2. www-client/chromium will not compile against musl unless you have cdefs.h,
-   tree.h and execinfo.h. These libraries should not be installed on your system
-   as it prompt packages to use them and cause breakages. A solution would be to
-   install them first, compile chromium, then uninstall them. I plan on creating
-   this function built into the ebuild as a temporary fix until we can fully
-   patch out chromium's reliance on glibc specific libraries.
+
+==== net-libs/nodejs
+1. Removes gcc as a dependency.
+
+==== www-client/chromium
+*Warning:* This will not compile against musl unless you have cdefs.h, tree.h
+and execinfo.h. These libraries **should not be installed** on your system as it
+will cause conflicts with build systems. In the future I will implement a
+function within the ebuild that will sort this out.
+
+1. Includes patches for musl.
+2. Includes hardening patches from hardened-chromium and Vanadium.
 
 === Acknowledgements
 
