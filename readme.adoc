@@ -8,7 +8,7 @@ profile.
 === Notes
 
 ==== net-libs/nodejs
-1. Removes gcc as a dependency.
+1. Removes gcc dependency.
 
 ==== www-client/chromium
 *Warning:* This will not compile against musl unless you have cdefs.h, tree.h
