@@ -11,10 +11,14 @@ profile.
 1. Removes gcc dependency.
 
 ==== www-client/chromium
-*Warning:* This will not compile against musl unless you have cdefs.h, tree.h
-and execinfo.h. These libraries **should not be installed** on your system as it
+
+[WARNING]
+====
+This will not compile against musl unless you have cdefs.h, tree.h and
+execinfo.h. These libraries **should not be installed** on your system as it
 will cause conflicts with build systems. In the future I will implement a
 function within the ebuild that will sort this out.
+====
 
 1. Includes patches for musl.
 2. Includes hardening patches from hardened-chromium and Vanadium.
