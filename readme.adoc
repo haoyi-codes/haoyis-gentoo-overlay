@@ -29,7 +29,7 @@ function within the ebuild that will sort this out.
 === Licenses
 
 This project uses third-party patches. Their licenses can be found in the
-link:licenses[licenses] directory.
+link:./licenses[licenses] directory.
 
-* link:licenses/hardened-chromium/[hardened-chromium patches]: Patches from SecureBlue's hardened-chromium.
-* link:licenses/vanadium/[vanadium patches]: Patches from GrapheneOS's Vanadium.
+* link:./licenses/hardened-chromium/[hardened-chromium patches]: Patches from SecureBlue's hardened-chromium.
+* link:./licenses/vanadium/[vanadium patches]: Patches from GrapheneOS's Vanadium.
