@@ -28,8 +28,14 @@ function within the ebuild that will sort this out.
 
 === Licenses
 
-This project uses third-party patches. Their licenses can be found in the
-link:./licenses[licenses] directory.
+[WARNING]
+====
+Since gitea does not support relative links for asciidoc files, I have used
+absolute links instead. This means that they will not work for mirrors.
+====
 
-* link:./licenses/hardened-chromium/[hardened-chromium patches]: Patches from SecureBlue's hardened-chromium.
-* link:./licenses/vanadium/[vanadium patches]: Patches from GrapheneOS's Vanadium.
+This project uses third-party patches. Their licenses can be found in the
+https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/licenses/[licenses] directory.
+
+* https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/licenses/hardened-chromium/[hardened-chromium patches]: Patches from SecureBlue's hardened-chromium.
+* https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/licenses/vanadium/[vanadium patches]: Patches from GrapheneOS's Vanadium.
