@@ -39,7 +39,9 @@ absolute links instead. This means that they will not work for mirrors.
 ====
 
 This project uses third-party patches. Their licenses can be found in the
-https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/licenses/[licenses] directory.
+https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/src/branch/main/licenses/[licenses] directory.
+link:src/branch/main/licenses/[licenses]
+link:./src/branch/main/licenses/[licenses]
 
-* https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/licenses/hardened-chromium/[hardened-chromium patches]: Patches from SecureBlue's hardened-chromium.
-* https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/licenses/vanadium/[vanadium patches]: Patches from GrapheneOS's Vanadium.
+* https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/src/branch/main/licenses/hardened-chromium/[hardened-chromium patches]: Patches from SecureBlue's hardened-chromium.
+* https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/src/branch/main/licenses/vanadium/[vanadium patches]: Patches from GrapheneOS's Vanadium.
