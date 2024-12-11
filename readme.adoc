@@ -1,5 +1,11 @@
 == Description
 
+[WARNING]
+====
+Since gitea does not support relative links for asciidoc files, I have used
+absolute links instead. This means that they will not work for mirrors.
+====
+
 This overlay is a work in progress.
 
 It is intended for use with amd64 systems with a strong focus on the musl/llvm
@@ -31,12 +37,6 @@ function within the ebuild that will sort this out.
 3. https://github.com/GrapheneOS/Vanadium
 
 === Licenses
-
-[WARNING]
-====
-Since gitea does not support relative links for asciidoc files, I have used
-absolute links instead. This means that they will not work for mirrors.
-====
 
 This project uses third-party patches. Their licenses can be found in the
 https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/src/branch/main/licenses/[licenses] directory.
