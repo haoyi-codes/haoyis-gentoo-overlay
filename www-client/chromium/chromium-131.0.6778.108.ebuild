@@ -404,8 +404,8 @@ src_prepare() {
 		eapply "${FILESDIR}/musl/"
 	fi
 
-	# Apply hardened-chromium patches.
-	eapply "${FILESDIR}/hardened-chromium/"
+	# Apply hardening patches.
+	eapply "${FILESDIR}/hardening/"
 
 	default
 
