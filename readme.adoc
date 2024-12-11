@@ -21,7 +21,7 @@ function within the ebuild that will sort this out.
 ====
 
 1. Includes patches for musl.
-2. Includes hardening patches from hardened-chromium and Vanadium.
+2. Includes patches from hardened-chromium and Vanadium.
 
 === Acknowledgements
 
