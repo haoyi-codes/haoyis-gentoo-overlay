@@ -33,7 +33,7 @@ that will sort this out.
 
 ==== www-client/chromium
 1. https://github.com/12101111/overlay
-2. https://github.com/secureblue/hardened-chromium
+2. https://github.com/secureblue/Trivalent
 3. https://github.com/GrapheneOS/Vanadium
 
 === Licenses
@@ -41,5 +41,6 @@ that will sort this out.
 This project uses third-party patches. Their licenses can be found in the
 https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/src/branch/main/licenses/[licenses] directory.
 
-* https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/src/branch/main/licenses/hardened-chromium/[hardened-chromium]: Patches from SecureBlue's hardened-chromium.
+*
+https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/src/branch/main/licenses/trivalent/[trivalent]: Patches from SecureBlue's Trivalent.
 * https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/src/branch/main/licenses/vanadium/[vanadium]: Patches from GrapheneOS's Vanadium.
