@@ -41,6 +41,5 @@ that will sort this out.
 This project uses third-party patches. Their licenses can be found in the
 https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/src/branch/main/licenses/[licenses] directory.
 
-*
-https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/src/branch/main/licenses/trivalent/[trivalent]: Patches from SecureBlue's Trivalent.
+* https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/src/branch/main/licenses/trivalent/[trivalent]: Patches from SecureBlue's Trivalent.
 * https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/src/branch/main/licenses/vanadium/[vanadium]: Patches from GrapheneOS's Vanadium.
