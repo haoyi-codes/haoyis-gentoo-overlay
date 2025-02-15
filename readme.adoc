@@ -35,11 +35,3 @@ that will sort this out.
 1. https://github.com/12101111/overlay
 2. https://github.com/secureblue/Trivalent
 3. https://github.com/GrapheneOS/Vanadium
-
-=== Licenses
-
-This project uses third-party patches. Their licenses can be found in the
-https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/src/branch/main/licenses/[licenses] directory.
-
-* https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/src/branch/main/licenses/trivalent/[trivalent]: Patches from SecureBlue's Trivalent.
-* https://src.reticentadmin.com/aryan/haoyis-gentoo-overlay/src/branch/main/licenses/vanadium/[vanadium]: Patches from GrapheneOS's Vanadium.
