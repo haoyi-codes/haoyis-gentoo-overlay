@@ -25,14 +25,15 @@ RUST_MIN_VER=1.78.0
 RUST_NEEDS_LLVM="yes please"
 
 inherit check-reqs chromium-2 desktop flag-o-matic llvm-r1 multiprocessing ninja-utils pax-utils
-inherit python-any-r1 qmake-utils readme.gentoo-r1 rust systemd toolchain-funcs virtualx xdg-utils
+inherit python-any-r1 readme.gentoo-r1 rust systemd toolchain-funcs virtualx xdg-utils
 
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://www.chromium.org/"
-PPC64_HASH="c11b515d9addc3f8b516502e553ace507eb81815"
-PATCH_V="${PV%%\.*}"
+PPC64_HASH="deefc994ce2d31faf6d27f5e81782e039c663aed"
+PATCH_V="${PV%%\.*}-2"
 SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}.tar.xz -> ${P}-linux.tar.xz
 		https://gitlab.com/Matt.Jolly/chromium-patches/-/archive/${PATCH_V}/chromium-patches-${PATCH_V}.tar.bz2
+                https://github.com/haoyi-codes/hardened-chromium/archive/refs/tags/hardened-chromium-${PV}.tar.gz
 	test? (
 		https://chromium-tarballs.distfiles.gentoo.org/${P}-linux-testdata.tar.xz
 		https://chromium-fonts.storage.googleapis.com/${TEST_FONT} -> chromium-testfonts-${TEST_FONT:0:10}.tar.gz
@@ -52,7 +53,7 @@ fi
 
 IUSE_SYSTEM_LIBS="+system-harfbuzz +system-icu +system-png +system-zstd"
 IUSE="+X ${IUSE_SYSTEM_LIBS} bindist cups debug ffmpeg-chromium gtk4 +hangouts headless kerberos +official pax-kernel pgo +proprietary-codecs pulseaudio"
-IUSE+=" qt5 qt6 +screencast selinux test +vaapi +wayland +widevine cpu_flags_ppc_vsx3"
+IUSE+=" qt6 +screencast selinux test +vaapi +wayland +widevine"
 RESTRICT="
 	!bindist? ( bindist )
 	!test? ( test )
@@ -61,7 +62,6 @@ RESTRICT="
 REQUIRED_USE="
 	!headless? ( || ( X wayland ) )
 	pgo? ( X !wayland )
-	qt6? ( qt5 )
 	screencast? ( wayland )
 	ffmpeg-chromium? ( bindist proprietary-codecs )
 "
@@ -133,10 +133,6 @@ COMMON_DEPEND="
 		x11-libs/cairo:=
 		x11-libs/gdk-pixbuf:2
 		x11-libs/pango:=
-		qt5? (
-			dev-qt/qtcore:5
-			dev-qt/qtwidgets:5
-		)
 		qt6? ( dev-qt/qtbase:6[gui,widgets] )
 	)
 "
@@ -146,7 +142,6 @@ RDEPEND="${COMMON_DEPEND}
 			x11-libs/gtk+:3[X?,wayland?]
 			gui-libs/gtk:4[X?,wayland?]
 		)
-		qt5? ( dev-qt/qtgui:5[X?,wayland?] )
 		qt6? ( dev-qt/qtbase:6[X?,wayland?] )
 	)
 	virtual/ttf-fonts
@@ -171,7 +166,6 @@ BDEPEND="
 	')
 	>=app-arch/gzip-1.7
 	!headless? (
-		qt5? ( dev-qt/qtcore:5 )
 		qt6? ( dev-qt/qtbase:6 )
 	)
 	$(llvm_gen_dep '
@@ -265,7 +259,7 @@ pkg_pretend() {
 	fi
 
 	if use headless; then
-		local headless_unused_flags=("cups" "kerberos" "pulseaudio" "qt5" "qt6" "vaapi" "wayland")
+		local headless_unused_flags=("cups" "kerberos" "pulseaudio" "qt6" "vaapi" "wayland")
 		for myiuse in ${headless_unused_flags[@]}; do
 			use ${myiuse} && ewarn "Ignoring USE=${myiuse}, USE=headless is set."
 		done
@@ -344,6 +338,7 @@ pkg_setup() {
 src_unpack() {
 	unpack ${P}-linux.tar.xz
 	unpack chromium-patches-${PATCH_V}.tar.bz2
+        unpack hardened-chromium-${PV}.tar.gz
 
 	use pgo && unpack chromium-profiler-0.2.tar
 
@@ -374,19 +369,36 @@ src_prepare() {
 		"${FILESDIR}/chromium-131-unbundle-icu-target.patch"
 		"${FILESDIR}/chromium-131-oauth2-client-switches.patch"
 		"${FILESDIR}/chromium-132-bindgen-custom-toolchain.patch"
+		"${FILESDIR}/chromium-134-qt5-optional.patch"
+		"${FILESDIR}/chromium-134-map_droppable-glibc.patch"
+		"${FILESDIR}/chromium-135-fix-non-wayland-build.patch"
 	)
+
 	shopt -s globstar nullglob
 	# 130: moved the PPC64 patches into the chromium-patches repo
 	local patch
 	for patch in "${WORKDIR}/chromium-patches-${PATCH_V}"/**/*.patch; do
-			if [[ ${patch} == *"ppc64le"* ]]; then
-					use ppc64 && PATCHES+=( "${patch}" )
-			else
-					PATCHES+=( "${patch}" )
-			fi
+		if [[ ${patch} == *"ppc64le"* ]]; then
+			use ppc64 && PATCHES+=( "${patch}" )
+		else
+			PATCHES+=( "${patch}" )
+		fi
 	done
-	shopt -u globstar nullglob
 
+        # Apply hardening patches
+        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/trivalent/"*".patch"; do
+            PATCHES+=( "${patch}" )
+        done
+
+        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/vanadium/"*".patch"; do
+            PATCHES+=( "${patch}" )
+        done
+
+        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/extra/"*".patch"; do
+            PATCHES+=( "${patch}" )
+        done
+
+	shopt -u globstar nullglob
 	# We can't use the bundled compiler builtins with the system toolchain
 	# `grep` is a development convenience to ensure we fail early when google changes something.
 	local builtins_match="if (is_clang && !is_nacl && !is_cronet_build) {"
@@ -398,7 +410,7 @@ src_prepare() {
 		# patch causes build errors on 4K page systems (https://bugs.gentoo.org/show_bug.cgi?id=940304)
 		local page_size_patch="ppc64le/third_party/use-sysconf-page-size-on-ppc64.patch"
 		local isa_3_patch="ppc64le/core/baseline-isa-3-0.patch"
-		# Apply the OpenPOWER patches (check for page size and isa3.0)
+		# Apply the OpenPOWER patches (check for page size and isa 3.0)
 		openpower_patches=( $(grep -E "^ppc64le|^upstream" "${patchset_dir}/series" | grep -v "${page_size_patch}" |
 			grep -v "${isa_3_patch}" || die) )
 		for patch in "${openpower_patches[@]}"; do
@@ -420,18 +432,20 @@ src_prepare() {
 			die "Failed to remove default visibility nightly option"
 	fi
 
-	# Check if user has musl libc.
+	# If the user has musl libc, remove the libatomic dependency.
 	if use elibc_musl; then
 		PATCHES+=( "${FILESDIR}/remove-libatomic.patch" )
 		eapply "${FILESDIR}/musl/"
 	fi
 
-	# Apply hardening patches.
-	eapply "${FILESDIR}/hardening/"
-
 	default
 
-	rm third_party/node/linux/node-linux-x64/bin/node || die
+	# Not included in -lite tarballs, but we should check for it anyway.
+	if [[ -f third_party/node/linux/node-linux-x64/bin/node ]]; then
+		rm third_party/node/linux/node-linux-x64/bin/node || die
+	else
+		mkdir -p third_party/node/linux/node-linux-x64/bin || die
+	fi
 	ln -s "${EPREFIX}"/usr/bin/node third_party/node/linux/node-linux-x64/bin/node || die
 
 	# adjust python interpreter version
@@ -538,6 +552,7 @@ src_prepare() {
 		third_party/fp16
 		third_party/freetype
 		third_party/fusejs
+		third_party/fuzztest
 		third_party/fxdiv
 		third_party/gemmlowp
 		third_party/google_input_tools
@@ -562,7 +577,6 @@ src_prepare() {
 		third_party/ipcz
 		third_party/jinja2
 		third_party/jsoncpp
-		third_party/jstemplate
 		third_party/khronos
 		third_party/lens_server_proto
 		third_party/leveldatabase
@@ -575,7 +589,6 @@ src_prepare() {
 		third_party/libavif
 		third_party/libc++
 		third_party/libdrm
-		third_party/libevent
 		third_party/libgav1
 		third_party/libjingle
 		third_party/libphonenumber
@@ -639,7 +652,6 @@ src_prepare() {
 		third_party/puffin
 		third_party/pyjson5
 		third_party/pyyaml
-		third_party/qcms
 		third_party/rapidhash
 		third_party/re2
 		third_party/rnnoise
@@ -651,6 +663,7 @@ src_prepare() {
 		third_party/sentencepiece
 		third_party/sentencepiece/src/third_party/darts_clone
 		third_party/shell-encryption
+		third_party/simdutf
 		third_party/simplejson
 		third_party/six
 		third_party/skia
@@ -682,6 +695,7 @@ src_prepare() {
 		third_party/unrar
 		third_party/utf
 		third_party/vulkan
+		third_party/wasm_tts_engine
 		third_party/wayland
 		third_party/webdriver
 		third_party/webgpu-cts
@@ -702,12 +716,12 @@ src_prepare() {
 		third_party/zlib/google
 		third_party/zxcvbn-cpp
 		url/third_party/mozilla
-		v8/src/third_party/siphash
-		v8/src/third_party/utf8-decoder
-		v8/src/third_party/valgrind
 		v8/third_party/glibc
 		v8/third_party/inspector_protocol
+		v8/third_party/siphash
+		v8/third_party/utf8-decoder
 		v8/third_party/v8
+		v8/third_party/valgrind
 
 		# gyp -> gn leftovers
 		third_party/speech-dispatcher
@@ -716,7 +730,7 @@ src_prepare() {
 	)
 
 	if use test; then
-		# tar tvf /var/cache/distfiles/${P}-testdata.tar.xz | grep '^d' | grep 'third_party' | awk '{print $NF}'
+		# tar tvf /var/cache/distfiles/${P}-linux-testdata.tar.xz | grep '^d' | grep 'third_party' | awk '{print $NF}'
 		keeplibs+=(
 			third_party/breakpad/breakpad/src/processor
 			third_party/google_benchmark/src/include/benchmark
@@ -1085,7 +1099,9 @@ chromium_configure() {
 	else
 		myconf_gn+=" use_system_minigbm=true"
 		myconf_gn+=" use_xkbcommon=true"
-		if use qt5 || use qt6; then
+		myconf_gn+=" use_qt5=false"
+		if use qt6; then
+			myconf_gn+=" use_qt6=true"
 			local cbuild_libdir=$(get_libdir)
 			if tc-is-cross-compiler; then
 				# Hack to workaround get_libdir not being able to handle CBUILD, bug #794181
@@ -1093,21 +1109,9 @@ chromium_configure() {
 				cbuild_libdir=${cbuild_libdir:2}
 				cbuild_libdir=${cbuild_libdir/% }
 			fi
-			if use qt5; then
-				if tc-is-cross-compiler; then
-					myconf_gn+=" moc_qt5_path=\"${EPREFIX}/${cbuild_libdir}/qt5/bin\""
-				else
-					myconf_gn+=" moc_qt5_path=\"$(qt5_get_bindir)\""
-				fi
-			fi
-			if use qt6; then
-				myconf_gn+=" moc_qt6_path=\"${EPREFIX}/usr/${cbuild_libdir}/qt6/libexec\""
-			fi
-
-			myconf_gn+=" use_qt=true"
-			myconf_gn+=" use_qt6=$(usex qt6 true false)"
+			myconf_gn+=" moc_qt6_path=\"${EPREFIX}/usr/${cbuild_libdir}/qt6/libexec\""
 		else
-			myconf_gn+=" use_qt=false"
+			myconf_gn+=" use_qt6=false"
 		fi
 		myconf_gn+=" ozone_platform_x11=$(usex X true false)"
 		myconf_gn+=" ozone_platform_wayland=$(usex wayland true false)"
@@ -1320,6 +1324,7 @@ src_test() {
 		TestLauncherTools.TruncateSnippetFocusedMatchesFatalMessagesTest
 		ToolsSanityTest.BadVirtualCallNull
 		ToolsSanityTest.BadVirtualCallWrongType
+		CancelableEventTest.BothCancelFailureAndSucceedOccurUnderContention #new m133: TODO investigate
 	)
 	local test_filter="-$(IFS=:; printf '%s' "${skip_tests[*]}")"
 	# test-launcher-bot-mode enables parallelism and plain output
@@ -1456,12 +1461,6 @@ pkg_postinst() {
 			elog "Chromium prefers GTK3 over GTK4 at runtime. To override this"
 			elog "behavior you need to pass --gtk-version=4, e.g. by adding it"
 			elog "to CHROMIUM_FLAGS in /etc/chromium/default."
-		fi
-		if use qt5 && use qt6; then
-			elog "Chromium automatically selects Qt5 or Qt6 based on your desktop"
-			elog "environment. To override you need to pass --qt-version=5 or"
-			elog "--qt-version=6, e.g. by adding it to CHROMIUM_FLAGS in"
-			elog "/etc/chromium/default."
 		fi
 	fi
 
