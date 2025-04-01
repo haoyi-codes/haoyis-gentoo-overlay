@@ -20,7 +20,7 @@ if [[ ${PV} == *9999 ]]; then
 else
 	SRC_URI="https://nodejs.org/dist/v${PV}/node-v${PV}.tar.xz"
 	SLOT="0/$(ver_cut 1)"
-	KEYWORDS="amd64 ~arm ~arm64 ~loong ~ppc64 ~riscv x86 ~amd64-linux ~x64-macos"
+	KEYWORDS="~amd64 ~arm ~arm64 ~loong ~ppc64 ~riscv ~x86 ~amd64-linux ~x64-macos"
 	S="${WORKDIR}/node-v${PV}"
 fi
 
@@ -33,20 +33,21 @@ REQUIRED_USE="inspector? ( icu ssl )
 
 RESTRICT="!test? ( test )"
 
-RDEPEND=">=app-arch/brotli-1.0.9:=
+RDEPEND=">=app-arch/brotli-1.1.0:=
 	dev-db/sqlite:3
-	>=dev-libs/libuv-1.46.0:=
-	>=dev-libs/simdjson-3.9.1:=
-	>=net-dns/c-ares-1.18.1:=
-	>=net-libs/nghttp2-1.61.0:=
+	>=dev-libs/libuv-1.49.2:=
+	>=dev-libs/simdjson-3.10.1:=
+	>=net-dns/c-ares-1.34.4:=
+	>=net-libs/nghttp2-1.64.0:=
+	>=net-libs/nghttp3-1.7.0:=
 	sys-libs/zlib
 	corepack? ( !sys-apps/yarn )
 	system-icu? ( >=dev-libs/icu-73:= )
 	system-ssl? (
-		>=net-libs/ngtcp2-1.3.0:=
+		>=net-libs/ngtcp2-1.9.1:=
 		>=dev-libs/openssl-1.1.1:0=
 	)
-	!system-ssl? ( >=net-libs/ngtcp2-1.3.0:=[-gnutls] )"
+	!system-ssl? ( >=net-libs/ngtcp2-1.9.1:=[-gnutls] )"
 BDEPEND="${PYTHON_DEPS}
 	app-alternatives/ninja
 	sys-apps/coreutils
@@ -104,16 +105,14 @@ src_prepare() {
 		BUILDTYPE=Debug
 	fi
 
-        # Remove -latomic so it can be compiled without gcc.
-        PATCHES+=(
-        	"${FILESDIR}"/${PN}-no-libatomic.patch
-        )
-
 	# We need to disable mprotect on two files when it builds Bug 694100.
 	use pax-kernel && PATCHES+=( "${FILESDIR}"/${PN}-22.12.0-paxmarking.patch )
 
 	# bug 931256
 	use riscv && PATCHES+=( "${FILESDIR}"/${PN}-22.2.0-riscv.patch )
+
+        # Remove -latomic so it can be compiled without gcc.
+        use elibc_musl && PATCHES+=( "${FILESDIR}"/${PN}-no-libatomic.patch )
 
 	default
 }
@@ -124,8 +123,25 @@ src_configure() {
 	# LTO compiler flags are handled by configure.py itself
 	filter-lto
 
-        # Append atomic flags.
-	append-atomic-flags
+        if use elibc_musl; then
+            # Append atomic flags to compile without gcc.
+            append-atomic-flags
+        else
+	    # The warnings are *so* noisy and make build.logs massive
+	    append-cxxflags $(test-flags-CXX -Wno-template-id-cdtor)
+	    # GCC with -ftree-vectorize miscompiles node's exception handling code
+	    # causing it to fail to catch exceptions sometimes
+	    # https://gcc.gnu.org/bugzilla/show_bug.cgi?id=116057
+	    tc-is-gcc && append-cxxflags -fno-tree-vectorize
+	    # https://bugs.gentoo.org/931514
+	    use arm64 && append-flags $(test-flags-CXX -mbranch-protection=none)
+	    # nodejs unconditionally links to libatomic #869992
+	    # specifically it requires __atomic_is_lock_free which
+	    # is not yet implemented by llvm-runtimes/compiler-rt (see
+	    # https://reviews.llvm.org/D85044?id=287068), therefore
+	    # we depend on gcc and force using libgcc as the support lib
+	    tc-is-clang && append-ldflags "--rtlib=libgcc --unwindlib=libgcc"
+        fi
 
 	local myconf=(
 		--ninja
@@ -136,6 +152,7 @@ src_configure() {
 		--shared-cares
 		--shared-libuv
 		--shared-nghttp2
+		--shared-nghttp3
 		--shared-ngtcp2
 		--shared-simdjson
 		# sindutf is not packaged yet
@@ -272,6 +289,8 @@ src_test() {
 		drop_tests+=(
 			test/parallel/test-inspector-emit-protocol-event.js
 			test/parallel/test-inspector-network-domain.js
+			test/parallel/test-inspector-network-fetch.js
+			test/parallel/test-inspector-network-http.js
 			test/sequential/test-watch-mode.mjs
 		)
 	rm -f "${drop_tests[@]}" || die "disabling tests failed"
