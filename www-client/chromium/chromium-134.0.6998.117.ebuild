@@ -401,28 +401,12 @@ src_unpack() {
 		unpack chromium-openpower-${PPC64_HASH:0:10}.tar.bz2
 	fi
 
-        # Apply hardening patches.
+        # Unpack hardened-chromium.
         unpack hardened-chromium-${PV}.tar.gz
 
-        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/trivalent"/*.patch; do
-            PATCHES+=( "${patch}" )
-        done
-
-        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/vanadium"/*.patch; do
-            PATCHES+=( "${patch}" )
-        done
-
-        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/extra"/*.patch; do
-            PATCHES+=( "${patch}" )
-        done
-
-        # Apply musl patches.
+        # Unpack chromium-musl-patches.
         if use elibc_musl; then
             unpack chromium-musl-patches-${PV}.tar.gz
-
-	    for patch in "${WORKDIR}/chromium-musl-patches-${PV}/patches"/*.patch; do
-                PATCHES+=( "${patch}" )
-            done
         fi
 }
 
@@ -441,9 +425,25 @@ src_prepare() {
 		"${FILESDIR}/chromium-135-fix-non-wayland-build.patch"
 	)
 
-        # Remove libatomic requirement for musl.
+        # Apply hardening patches.
+        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/trivalent"/*.patch; do
+            PATCHES+=( "${patch}" )
+        done
+
+        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/vanadium"/*.patch; do
+            PATCHES+=( "${patch}" )
+        done
+
+        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/extra"/*.patch; do
+            PATCHES+=( "${patch}" )
+        done
+
+        # Apply musl patches.
         if use elibc_musl; then
             PATCHES+=( "${FILESDIR}/remove-libatomic.patch" )
+	    for patch in "${WORKDIR}/chromium-musl-patches-${PV}/patches"/*.patch; do
+                PATCHES+=( "${patch}" )
+            done
         fi
 
 	if use bundled-toolchain; then
