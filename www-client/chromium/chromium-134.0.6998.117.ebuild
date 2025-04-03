@@ -50,8 +50,8 @@ HOMEPAGE="https://www.chromium.org/"
 PPC64_HASH="7d1ac28278b5679d0b950ebd380bdd889b319592"
 PATCH_V="${PV%%\.*}-1"
 SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}.tar.xz -> ${P}-linux.tar.xz
-         https://github.com/haoyi-codes/hardened-chromium/archive/refs/tags/hardened-chromium-${PV}.tar.gz
-         https://github.com/haoyi-codes/chromium-musl-patches/archive/refs/tags/chromium-musl-patches-${PV}.tar.gz
+         https://github.com/haoyi-codes/hardened-chromium/archive/refs/tags/${PV}.tar.gz -> hardened-chromium-${PV}.tar.gz
+         https://github.com/haoyi-codes/chromium-musl-patches/archive/refs/tags/${PV}.tar.gz -> chromium-musl-patches-${PV}.tar.gz
 
 	!bundled-toolchain? (
 		https://gitlab.com/Matt.Jolly/chromium-patches/-/archive/${PATCH_V}/chromium-patches-${PATCH_V}.tar.bz2
