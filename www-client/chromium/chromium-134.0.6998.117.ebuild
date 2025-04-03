@@ -404,15 +404,15 @@ src_unpack() {
         # Apply hardening patches.
         unpack hardened-chromium-${PV}.tar.gz
 
-        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/trivalent/"*".patch"; do
+        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/trivalent"/*.patch; do
             PATCHES+=( "${patch}" )
         done
 
-        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/vanadium/"*".patch"; do
+        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/vanadium"/*.patch; do
             PATCHES+=( "${patch}" )
         done
 
-        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/extra/"*".patch"; do
+        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/extra"/*.patch; do
             PATCHES+=( "${patch}" )
         done
 
@@ -420,7 +420,7 @@ src_unpack() {
         if use elibc_musl; then
             unpack chromium-musl-patches-${PV}.tar.gz
 
-            for patch in "${WORKDIR}/chromium-musl-patches-${PV}/patches/"*".patch"; do
+	    for patch in "${WORKDIR}/chromium-musl-patches-${PV}/patches"/*.patch; do
                 PATCHES+=( "${patch}" )
             done
         fi
@@ -440,6 +440,11 @@ src_prepare() {
 		"${FILESDIR}/chromium-134-bindgen-custom-toolchain.patch"
 		"${FILESDIR}/chromium-135-fix-non-wayland-build.patch"
 	)
+
+        # Remove libatomic requirement for musl.
+        if use elibc_musl; then
+            PATCHES+=( "${FILESDIR}/remove-libatomic.patch" )
+        fi
 
 	if use bundled-toolchain; then
 		# We need to symlink the toolchain into the expected location
