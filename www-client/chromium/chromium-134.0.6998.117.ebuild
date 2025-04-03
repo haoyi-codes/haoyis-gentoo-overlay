@@ -440,7 +440,6 @@ src_prepare() {
 
         # Apply musl patches.
         if use elibc_musl; then
-            PATCHES+=( "${FILESDIR}/remove-libatomic.patch" )
 	    for patch in "${WORKDIR}/chromium-musl-patches-${PV}/patches/"*".patch"; do
                 PATCHES+=( "${patch}" )
             done
