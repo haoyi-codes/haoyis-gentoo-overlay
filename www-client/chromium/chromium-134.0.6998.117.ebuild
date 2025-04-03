@@ -426,22 +426,22 @@ src_prepare() {
 	)
 
         # Apply hardening patches.
-        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/trivalent"/*.patch; do
+        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/trivalent/"*".patch"; do
             PATCHES+=( "${patch}" )
         done
 
-        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/vanadium"/*.patch; do
+        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/vanadium/"*".patch"; do
             PATCHES+=( "${patch}" )
         done
 
-        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/extra"/*.patch; do
+        for patch in "${WORKDIR}/hardened-chromium-${PV}/patches/extra/"*".patch"; do
             PATCHES+=( "${patch}" )
         done
 
         # Apply musl patches.
         if use elibc_musl; then
             PATCHES+=( "${FILESDIR}/remove-libatomic.patch" )
-	    for patch in "${WORKDIR}/chromium-musl-patches-${PV}/patches"/*.patch; do
+	    for patch in "${WORKDIR}/chromium-musl-patches-${PV}/patches/"*".patch"; do
                 PATCHES+=( "${patch}" )
             done
         fi
