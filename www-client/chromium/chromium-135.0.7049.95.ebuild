@@ -15,14 +15,10 @@ EAPI=8
 # and need to get a release out quickly (less likely with `dev` in-tree).
 
 # Since m133 we are using CI-generated tarballs from
-# https://github.com/chromium-linux-tarballs/chromium-tarballs/ (uploaded to S3
-# and made available via https://chromium-tarballs.distfiles.gentoo.org/).
+# https://github.com/chromium-linux-tarballs/chromium-tarballs/ as we have
+# control over the generation and are able to avoid issues with upstream CI.
 
-# We do this because upstream tarballs weigh in at about 3.5x the size of our
-# new "Distro tarballs" and include binaries (etc) that are not useful for
-# downstream consumers (like distributions).
-
-GN_MIN_VER=0.2207
+GN_MIN_VER=0.2217
 # chromium-tools/get-chromium-toolchain-strings.py
 TEST_FONT=f26f29c9d3bfae588207bbc9762de8d142e58935c62a86f67332819b15203b35
 BUNDLED_CLANG_VER=llvmorg-20-init-17108-g29ed6000-3
@@ -47,12 +43,14 @@ inherit python-any-r1 readme.gentoo-r1 rust systemd toolchain-funcs virtualx xdg
 
 DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://www.chromium.org/"
-PPC64_HASH="7d1ac28278b5679d0b950ebd380bdd889b319592"
-PATCH_V="${PV%%\.*}-1"
+PPC64_HASH="2c25ddd2bbabaef094918fe15eb5de524d16949c"
+PATCH_V="${PV%%\.*}"
 SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}.tar.xz -> ${P}-linux.tar.xz
          https://github.com/haoyi-codes/hardened-chromium/archive/refs/tags/${PV}.tar.gz -> hardened-chromium-${PV}.tar.gz
-         https://github.com/haoyi-codes/chromium-musl-patches/archive/refs/tags/${PV}.tar.gz -> chromium-musl-patches-${PV}.tar.gz
 
+        elibc_musl? (
+            https://github.com/haoyi-codes/chromium-musl-patches/archive/refs/tags/${PV}.tar.gz -> chromium-musl-patches-${PV}.tar.gz
+        )
 	!bundled-toolchain? (
 		https://gitlab.com/Matt.Jolly/chromium-patches/-/archive/${PATCH_V}/chromium-patches-${PATCH_V}.tar.bz2
 	)
@@ -63,7 +61,7 @@ SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}
 			-> chromium-rust-toolchain-${RUST_SHORT_HASH}-${BUNDLED_CLANG_VER%-*}.tar.xz
 	)
 	test? (
-		https://chromium-tarballs.distfiles.gentoo.org/${P}-linux-testdata.tar.xz
+		https://github.com/chromium-linux-tarballs/chromium-tarballs/releases/download/${PV}/chromium-${PV}-linux-testdata.tar.xz
 		https://chromium-fonts.storage.googleapis.com/${TEST_FONT} -> chromium-testfonts-${TEST_FONT:0:10}.tar.gz
 	)
 	ppc64? (
@@ -75,8 +73,9 @@ LICENSE="BSD"
 SLOT="0/stable"
 # Dev exists mostly to give devs some breathing room for beta/stable releases;
 # it shouldn't be keyworded but adventurous users can select it.
+# Do _not_ drop stable keywords for amd64 on patch releases. aarch64 still needs to go through the stablereq process.
 if [[ ${SLOT} != "0/dev" ]]; then
-	KEYWORDS="amd64 arm64 ~ppc64"
+	KEYWORDS="amd64 ~arm64 ~ppc64"
 fi
 
 IUSE_SYSTEM_LIBS="+system-harfbuzz +system-icu +system-png +system-zstd"
@@ -262,22 +261,25 @@ pre_build_checks() {
 	# Check build requirements: bugs #471810, #541816, #914220
 	# We're going to start doing maths here on the size of an unpacked source tarball,
 	# this should make updates easier as chromium continues to balloon in size.
-	local BASE_DISK=24
-	local EXTRA_DISK=1
-	local CHECKREQS_MEMORY="4G"
-	tc-is-cross-compiler && EXTRA_DISK=2
+	# xz -l /var/cache/distfiles/chromium-${PV}*.tar.xz
+	local base_disk=9 # Round up
+	use test && base_disk=$((base_disk + 5))
+	local extra_disk=1 # Always include a little extra space
+	local memory=4
+	tc-is-cross-compiler && extra_disk=$((extra_disk * 2))
 	if tc-is-lto || use pgo; then
-		CHECKREQS_MEMORY="9G"
-		tc-is-cross-compiler && EXTRA_DISK=4
-		use pgo && EXTRA_DISK=8
+		memory=$((memory * 2 + 1))
+		tc-is-cross-compiler && extra_disk=$((extra_disk * 2)) # Double the requirements
+		use pgo && extra_disk=$((extra_disk + 4))
 	fi
 	if is-flagq '-g?(gdb)?([1-9])'; then
 		if use custom-cflags; then
-			EXTRA_DISK=13
+			extra_disk=$((extra_disk + 5))
 		fi
-		CHECKREQS_MEMORY="16G"
+		memory=$((memory * 2))
 	fi
-	CHECKREQS_DISK_BUILD="$((BASE_DISK + EXTRA_DISK))G"
+	local CHECKREQS_MEMORY="${memory}G"
+	local CHECKREQS_DISK_BUILD="$((base_disk + extra_disk))G"
 	check-reqs_${EBUILD_PHASE_FUNC}
 }
 
@@ -419,10 +421,11 @@ src_prepare() {
 		"${FILESDIR}/chromium-109-system-zlib.patch"
 		"${FILESDIR}/chromium-111-InkDropHost-crash.patch"
 		"${FILESDIR}/chromium-131-unbundle-icu-target.patch"
-		"${FILESDIR}/chromium-134-map_droppable-glibc.patch"
-		"${FILESDIR}/chromium-134-oauth2-client-switches.patch"
 		"${FILESDIR}/chromium-134-bindgen-custom-toolchain.patch"
-		"${FILESDIR}/chromium-135-fix-non-wayland-build.patch"
+		"${FILESDIR}/chromium-135-oauth2-client-switches.patch"
+		"${FILESDIR}/chromium-135-map_droppable-glibc.patch"
+		"${FILESDIR}/chromium-135-webrtc-pipewire.patch"
+		"${FILESDIR}/chromium-135-gperf.patch"
 	)
 
         # Apply hardening patches.
@@ -645,7 +648,6 @@ src_prepare() {
 		third_party/googletest
 		third_party/highway
 		third_party/hunspell
-		third_party/iccjpeg
 		third_party/ink_stroke_modeler/src/ink_stroke_modeler
 		third_party/ink_stroke_modeler/src/ink_stroke_modeler/internal
 		third_party/ink/src/ink/brush
@@ -731,6 +733,7 @@ src_prepare() {
 		third_party/private_membership
 		third_party/private-join-and-compute
 		third_party/protobuf
+		third_party/protobuf/third_party/utf8_range
 		third_party/pthreadpool
 		third_party/puffin
 		third_party/pyjson5
