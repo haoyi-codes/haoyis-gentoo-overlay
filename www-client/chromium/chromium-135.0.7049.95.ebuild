@@ -45,7 +45,7 @@ DESCRIPTION="Open-source version of Google Chrome web browser"
 HOMEPAGE="https://www.chromium.org/"
 PPC64_HASH="2c25ddd2bbabaef094918fe15eb5de524d16949c"
 PATCH_V="${PV%%\.*}"
-SRC_URI="https://commondatastorage.googleapis.com/chromium-browser-official/${P}.tar.xz -> ${P}-linux.tar.xz
+SRC_URI="https://github.com/chromium-linux-tarballs/chromium-tarballs/releases/download/${PV}/chromium-${PV}-linux.tar.xz
          https://github.com/haoyi-codes/hardened-chromium/archive/refs/tags/${PV}.tar.gz -> hardened-chromium-${PV}.tar.gz
 
         elibc_musl? (
