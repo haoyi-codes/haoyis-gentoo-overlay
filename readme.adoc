@@ -16,22 +16,4 @@ profile.
 ==== net-libs/nodejs
 1. Removes gcc dependency.
 
-==== www-client/chromium
-
-[WARNING]
-====
-This will not compile against musl unless you have cdefs.h and execinfo.h. These
-libraries **should not be installed** on your system as it will cause conflicts
-with build systems. In the future I will implement a function within the ebuild
-that will sort this out.
-====
-
-1. Includes patches for musl.
-2. Includes patches from Trivalent and Vanadium.
-
 === Acknowledgements
-
-==== www-client/chromium
-1. https://github.com/12101111/overlay
-2. https://github.com/secureblue/Trivalent
-3. https://github.com/GrapheneOS/Vanadium
